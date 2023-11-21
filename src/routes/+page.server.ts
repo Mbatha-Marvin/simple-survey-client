@@ -21,6 +21,4 @@ export const load = async () => {
         questions: await getQuestions(),
     }
 
-
-
 }

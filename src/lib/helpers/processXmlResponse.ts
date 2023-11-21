@@ -19,29 +19,29 @@ export type gender = {
     genderOptionsText: string[]
     genderOptionsValues: string[]
 }
- export type programmingStack = {
+export type programmingStack = {
     title: string,
     displayText: string
     multiple: boolean
     programmingStackOptionsText: string[]
     programmingStackOptionsValues: string[]
 }
-export type certificate ={
+export type certificate = {
     title: string,
     displayText: string
     multiple: boolean
-    fileType:string
+    fileType: string
     maxFileSize: string
     maxFileSizeUnit: string
 }
 
-export type questions ={
-    fullName: fullName, 
-    emailAddress: emailAddress, 
-    description: description, 
-    gender: gender, 
+export type questions = {
+    fullName: fullName,
+    emailAddress: emailAddress,
+    description: description,
+    gender: gender,
     programmingStack: programmingStack,
-    certificate:certificate
+    certificate: certificate
 }
 
 
@@ -227,13 +227,13 @@ export const parseQuestions = (questionXml: string) => {
             "programmingStackOptionsValues": programmingStackOptionsValues
 
         },
-        "certificate" :{
+        "certificate": {
             "title": certificateTitle,
             "displayText": certificateText,
             "multiple": certificateSelectionMultiple,
-            "fileType" : certificateFileType,
-            "maxFileSize" : certificateMaxFileSize,
-            "maxFileSizeUnit" :certificateMaxFileSizeUnits
+            "fileType": certificateFileType,
+            "maxFileSize": certificateMaxFileSize,
+            "maxFileSizeUnit": certificateMaxFileSizeUnits
 
         }
     }
@@ -242,4 +242,69 @@ export const parseQuestions = (questionXml: string) => {
     // console.log(questionsJson);
 
     return questions;
-} 
+}
+
+export const parseResponses = (responseXml: string) => {
+
+    const parsedXml = parseXml(responseXml).children as XmlElement[];
+    const responseJson = parsedXml[0].toJSON();
+
+    const questionResponsesRootAttributes = responseJson.attributes as JsonObject;
+    const questionResponsesCurrentPage = questionResponsesRootAttributes.current_page.toString();
+    const questionResponsesLastPage = questionResponsesRootAttributes.last_page.toString();
+    const questionResponsesPageSize = questionResponsesRootAttributes.page_size.toString();
+    const questionResponsesTotalCount = questionResponsesRootAttributes.total_count.toString();
+
+    const responsesList = responseJson.children as JsonObject[];
+
+    const questionResponseList = [];
+
+
+
+    for (let i = 0; i < responsesList.length; i++) {
+        const questionResponseBaseElements = responsesList[i].children as JsonObject[]
+
+        const singleResponse = {}
+
+        for (let j = 0; j < questionResponseBaseElements.length - 2; j++) {
+            // full name
+            const fieldTitle = questionResponseBaseElements[j].name.toString()
+            // console.log(fieldTitle);
+
+            const questionResponseBaseFullNameValue = questionResponseBaseElements[j].children as JsonObject[]
+            // console.log(questionResponseBaseFullNameValue[0].text.toString());
+
+            singleResponse[fieldTitle] = questionResponseBaseFullNameValue[0].text.toString()
+        }
+
+        // certificates
+        const certificateBaseElementsList = questionResponseBaseElements[questionResponseBaseElements.length - 2].children as JsonObject[]
+
+        const certificateList = []
+        for (let i = 0; i < certificateBaseElementsList.length; i++) {
+            const certificateElementValue = certificateBaseElementsList[i].children[0].text as string;
+            // console.log(certificateElementValue);
+            certificateList.push(certificateElementValue)
+        }
+
+        singleResponse["certificates"] = certificateList;
+
+        const dateRespondedBase = questionResponseBaseElements[questionResponseBaseElements.length - 1].children[0].text as string;
+
+        singleResponse["dateResponded"] = dateRespondedBase
+
+        questionResponseList.push(singleResponse)
+
+    }
+
+    // responses list
+    const responses = {
+        "currentPage": questionResponsesCurrentPage,
+        "lastPage": questionResponsesLastPage,
+        "pageSize": questionResponsesPageSize,
+        "totalCount": questionResponsesTotalCount,
+        "questionResponses": questionResponseList
+    }
+
+    return responses
+}

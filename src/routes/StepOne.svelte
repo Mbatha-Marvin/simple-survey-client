@@ -14,7 +14,7 @@
 			<span>{title}</span>
 			<input
 				class="input"
-				name="surname"
+				name="fullName"
 				title="{title}"
 				bind:value={fullName}
 				type="text"
